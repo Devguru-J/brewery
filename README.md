@@ -2,6 +2,18 @@
 
 `brew update` → `brew upgrade` → `brew upgrade --greedy` 를 버튼 하나로 실행하는 macOS 앱.
 
+## 설치 (Homebrew)
+
+```bash
+brew install --cask devguru-j/tap/brewery
+```
+
+아직 Apple 공증을 거치지 않은 빌드라 처음 열 때 macOS가 막을 수 있다. 그 경우 시스템 설정 → 개인정보 보호 및 보안에서 "그래도 열기"를 누르거나, 아래처럼 격리 속성을 지운다.
+
+```bash
+xattr -dr com.apple.quarantine /Applications/brewery.app
+```
+
 ## 빌드
 
 ```bash
@@ -44,6 +56,12 @@ xcodebuild -scheme brewery -destination 'platform=macOS' -derivedDataPath build 
 
 관리자 비밀번호가 필요한 cask는 GUI에서 입력받을 수 없어 실패로 표시됩니다. 그 항목은 터미널에서 직접 실행하세요.
 
+## 릴리스 만들기
+
+```bash
+scripts/release.sh 1.0.0      # Release 빌드 → build/release/brewery-1.0.0.zip + sha256
+```
+
 ## 앱 아이콘
 
 원본은 `assets/brewery_app_icon.png`. 바꾸려면 새 이미지를 같은 자리에 두고 아래를 실행한다.
@@ -54,3 +72,7 @@ for s in 16 32 64 128 256 512 1024; do
   sips -z $s $s /tmp/icon-1024.png --out Resources/Assets.xcassets/AppIcon.appiconset/icon_$s.png
 done
 ```
+
+## 라이선스
+
+MIT. Made by Memory(기억) · https://bymemory.dev
