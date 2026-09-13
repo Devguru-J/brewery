@@ -37,10 +37,6 @@ struct SearchScreen: View {
         }
         .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius, style: .continuous))
-        .onChange(of: selected) { _, id in
-            guard let r = store.searchResults.first(where: { $0.id == id }) else { store.clearInfo(); return }
-            Task { await store.loadInfo(name: r.name, kind: r.kind) }
-        }
     }
 
     @ViewBuilder
@@ -68,39 +64,9 @@ struct SearchScreen: View {
     @ViewBuilder
     private var detailPane: some View {
         if let r = selectedResult {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: r.kind == .cask ? "app.fill" : "shippingbox")
-                        .font(.title2).foregroundStyle(theme.accent)
-                    Text(r.name).font(theme.titleFont)
-                    Spacer()
-                }
-                if store.isLoadingInfo {
-                    ProgressView().controlSize(.small)
-                } else if let info = store.selectedInfo {
-                    Text(info.description.isEmpty ? "설명 없음" : info.description)
-                        .font(theme.bodyFont)
-                    LabeledContent("종류") { Text(r.kind == .cask ? "Cask" : "Formula") }
-                    LabeledContent("버전") { Text(info.version).font(theme.logFont) }
-                    if let url = URL(string: info.homepage), !info.homepage.isEmpty {
-                        LabeledContent("홈페이지") { Link(info.homepage, destination: url) }
-                    }
-                }
-                Spacer()
-                let installed = store.installed.contains { $0.id == r.id }
-                Button {
-                    Task { await pipeline.install(name: r.name, kind: r.kind) }
-                } label: {
-                    Label(installed ? "이미 설치됨" : "설치", systemImage: installed ? "checkmark.circle" : "arrow.down.circle.fill")
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(theme.accent)
-                .controlSize(.large)
-                .disabled(installed || pipeline.isBusy || store.isLoadingInfo)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            let installed = store.installed.first { $0.id == r.id }
+            let outdated = pipeline.outdated.first { $0.id == r.id }
+            PackageDetailView(name: r.name, kind: r.kind, installedVersion: installed?.version, outdated: outdated)
         } else {
             ContentUnavailableView("패키지를 선택하세요", systemImage: "info.circle")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

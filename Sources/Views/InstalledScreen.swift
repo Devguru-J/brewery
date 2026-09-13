@@ -5,70 +5,34 @@ struct InstalledScreen: View {
     @Environment(UpgradePipeline.self) private var pipeline
     @Environment(\.theme) private var theme
     @State private var filter = ""
+    @State private var onlyOutdated = false
     @State private var selection = Set<InstalledPackage.ID>()
     @State private var confirmingDelete = false
 
+    private var outdatedByID: [String: OutdatedPackage] {
+        Dictionary(pipeline.outdated.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    }
     private var filtered: [InstalledPackage] {
         let q = filter.trimmingCharacters(in: .whitespaces).lowercased()
-        return q.isEmpty ? store.installed : store.installed.filter { $0.name.lowercased().contains(q) }
+        let outdated = outdatedByID
+        return store.installed.filter {
+            (q.isEmpty || $0.name.lowercased().contains(q)) && (!onlyOutdated || outdated[$0.id] != nil)
+        }
     }
     private var formulae: [InstalledPackage] { filtered.filter { $0.kind == .formula } }
     private var casks: [InstalledPackage] { filtered.filter { $0.kind == .cask } }
     private var selectedPackages: [InstalledPackage] { store.installed.filter { selection.contains($0.id) } }
+    private var selectedOutdated: [InstalledPackage] { selectedPackages.filter { outdatedByID[$0.id] != nil } }
+    private var focused: InstalledPackage? { selection.count == 1 ? selectedPackages.first : nil }
+    private var outdatedInstalledCount: Int { store.installed.filter { outdatedByID[$0.id] != nil }.count }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                TextField("이름으로 필터", text: $filter)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 280)
-                Text("formula \(store.formulae.count) · cask \(store.casks.count)")
-                    .font(theme.captionFont)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button {
-                    Task { await store.refreshInstalled() }
-                } label: {
-                    if store.isLoadingInstalled { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.clockwise") }
-                }
-                .buttonStyle(.borderless)
-                .disabled(store.isLoadingInstalled)
-                .help("목록 새로고침")
-                Button(role: .destructive) {
-                    confirmingDelete = true
-                } label: {
-                    Label("선택 삭제 (\(selection.count))", systemImage: "trash")
-                }
-                .disabled(selection.isEmpty || pipeline.isBusy)
-            }
-            .padding(.horizontal, 16).padding(.vertical, 12)
-
+            toolbar
             Divider()
-
-            if store.installed.isEmpty {
-                ContentUnavailableView(
-                    store.isLoadingInstalled ? "불러오는 중…" : "설치된 패키지가 없습니다",
-                    systemImage: store.isLoadingInstalled ? "hourglass" : "shippingbox",
-                    description: Text(store.lastError ?? "")
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if filtered.isEmpty {
-                ContentUnavailableView.search(text: filter)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List(selection: $selection) {
-                    if !formulae.isEmpty {
-                        Section("Formulae (\(formulae.count))") {
-                            ForEach(formulae) { InstalledRow(package: $0) }
-                        }
-                    }
-                    if !casks.isEmpty {
-                        Section("Casks (\(casks.count))") {
-                            ForEach(casks) { InstalledRow(package: $0) }
-                        }
-                    }
-                }
-                .scrollContentBackground(.hidden)
+            HSplitView {
+                list.frame(minWidth: 320)
+                detail.frame(minWidth: 300)
             }
         }
         .background(cardBackground)
@@ -86,6 +50,100 @@ struct InstalledScreen: View {
         }
     }
 
+    private var toolbar: some View {
+        HStack(spacing: 12) {
+            TextField("이름으로 필터", text: $filter)
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: 220)
+            Toggle(isOn: $onlyOutdated) {
+                Text("업데이트만")
+                if outdatedInstalledCount > 0 {
+                    Text("\(outdatedInstalledCount)")
+                        .font(theme.captionFont.weight(.bold))
+                        .padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(Capsule().fill(theme.accent.opacity(0.18)))
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            .toggleStyle(.button)
+            Text("formula \(store.formulae.count) · cask \(store.casks.count)")
+                .font(theme.captionFont)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button {
+                Task {
+                    await store.refreshInstalled()
+                    await pipeline.refreshOutdated()
+                }
+            } label: {
+                if store.isLoadingInstalled || pipeline.isRefreshing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.clockwise") }
+            }
+            .buttonStyle(.borderless)
+            .disabled(store.isLoadingInstalled || pipeline.isBusy)
+            .help("목록 새로고침")
+            Button {
+                let items = selectedOutdated
+                Task { await pipeline.upgrade(items) }
+            } label: {
+                Label("업그레이드 (\(selectedOutdated.count))", systemImage: "arrow.up.circle")
+            }
+            .buttonStyle(.borderedProminent).tint(theme.accent)
+            .disabled(selectedOutdated.isEmpty || pipeline.isBusy)
+            Button(role: .destructive) {
+                confirmingDelete = true
+            } label: {
+                Label("삭제 (\(selection.count))", systemImage: "trash")
+            }
+            .disabled(selection.isEmpty || pipeline.isBusy)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+    }
+
+    @ViewBuilder
+    private var list: some View {
+        if store.installed.isEmpty {
+            ContentUnavailableView(
+                store.isLoadingInstalled ? "불러오는 중…" : "설치된 패키지가 없습니다",
+                systemImage: store.isLoadingInstalled ? "hourglass" : "shippingbox",
+                description: Text(store.lastError ?? "")
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if filtered.isEmpty {
+            ContentUnavailableView(onlyOutdated && filter.isEmpty ? "모두 최신입니다" : "결과 없음",
+                                   systemImage: onlyOutdated ? "checkmark.seal.fill" : "magnifyingglass")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List(selection: $selection) {
+                if !formulae.isEmpty {
+                    Section("Formulae (\(formulae.count))") {
+                        ForEach(formulae) { InstalledRow(package: $0, outdated: outdatedByID[$0.id]) }
+                    }
+                }
+                if !casks.isEmpty {
+                    Section("Casks (\(casks.count))") {
+                        ForEach(casks) { InstalledRow(package: $0, outdated: outdatedByID[$0.id]) }
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        if let p = focused {
+            PackageDetailView(name: p.name, kind: p.kind, installedVersion: p.version, outdated: outdatedByID[p.id])
+        } else if selection.count > 1 {
+            ContentUnavailableView("\(selection.count)개 선택됨", systemImage: "checklist",
+                                   description: Text("위 버튼으로 선택한 항목을 업그레이드하거나 삭제합니다"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ContentUnavailableView("패키지를 선택하세요", systemImage: "info.circle",
+                                   description: Text("설명, 버전, 업데이트 여부를 보여줍니다"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: theme.cornerRadius, style: .continuous)
             .fill(theme.cardFill)
@@ -95,15 +153,30 @@ struct InstalledScreen: View {
 
 struct InstalledRow: View {
     let package: InstalledPackage
+    let outdated: OutdatedPackage?
     @Environment(\.theme) private var theme
 
     var body: some View {
-        HStack {
-            Image(systemName: package.kind == .cask ? "app.fill" : "shippingbox")
-                .foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            PackageIcon(name: package.name, kind: package.kind, size: 22)
             Text(package.name).font(theme.bodyFont)
-            Spacer()
-            Text(package.version).font(theme.logFont).foregroundStyle(.secondary)
+            if let outdated {
+                Text("업데이트")
+                    .font(theme.captionFont.weight(.semibold))
+                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(Capsule().fill(theme.accent.opacity(0.18)))
+                    .foregroundStyle(theme.accent)
+                Spacer()
+                HStack(spacing: 5) {
+                    Text(package.version).foregroundStyle(.secondary)
+                    Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondary)
+                    Text(outdated.currentVersion).foregroundStyle(theme.accent)
+                }
+                .font(theme.logFont)
+            } else {
+                Spacer()
+                Text(package.version).font(theme.logFont).foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 2)
         .tag(package.id)

@@ -34,3 +34,10 @@
 ## 테스트
 
 파서 3종, `PackageStore`(가짜 러너 + 임시 Caskroom), 설치·삭제 흐름(가짜 러너, 명령 순서·콜백 호출).
+
+## 3차 추가 (2026-09-13)
+
+- 설치 목록 화면을 좌우 분할: 왼쪽 목록, 오른쪽 `PackageDetailView`(검색 화면과 공유). 아이콘, 설명, 설치 버전, 새 버전, 홈페이지, 설치/업그레이드/삭제 버튼.
+- 아이콘: `AppIconResolver` — Caskroom/<name>/<version>/*.app → /Applications/<artifacts app> 순으로 찾아 `NSWorkspace.icon(forFile:)`. formula는 심볼. 캐시는 설치·삭제·업그레이드 후 무효화.
+- 업데이트 표시: 설치 목록 행에 "업데이트" 배지와 `현재 → 새 버전`. "업데이트만" 토글 필터. 변경 내역은 brew가 제공하지 않으므로 홈페이지 링크로 대신.
+- 선택 업그레이드: `UpgradePipeline.upgrade(_ items:)` → `brew upgrade <formulae…>`, `brew upgrade --cask <casks…>`. 설치 목록 툴바(다중 선택), 상세 패널(단일), 업데이트 가능 목록 행(단일)에서 호출.

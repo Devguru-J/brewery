@@ -67,12 +67,12 @@ struct OutdatedList: View {
 
 struct PackageRow: View {
     let package: OutdatedPackage
+    @Environment(UpgradePipeline.self) private var pipeline
     @Environment(\.theme) private var theme
 
     var body: some View {
-        HStack {
-            Image(systemName: package.kind == .cask ? "app.fill" : "shippingbox")
-                .foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            PackageIcon(name: package.name, kind: package.kind, size: 22)
             Text(package.name).font(theme.bodyFont)
             Spacer()
             HStack(spacing: 6) {
@@ -81,6 +81,12 @@ struct PackageRow: View {
                 Text(package.currentVersion).foregroundStyle(theme.accent)
             }
             .font(theme.logFont)
+            Button("업그레이드") {
+                Task { await pipeline.upgrade([InstalledPackage(name: package.name, version: package.installedVersion, kind: package.kind)]) }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(pipeline.isBusy)
         }
         .padding(.vertical, 2)
     }
