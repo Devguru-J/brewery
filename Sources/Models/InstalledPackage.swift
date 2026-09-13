@@ -23,4 +23,6 @@ struct PackageInfo: Equatable, Sendable {
     let homepage: String
     let version: String
     let isInstalled: Bool
+    /// cask가 설치하는 .app 이름들 (artifacts의 app 항목). formula는 빈 배열.
+    var appNames: [String] = []
 }

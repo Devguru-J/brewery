@@ -67,3 +67,22 @@ final class PackageActionsTests: XCTestCase {
         XCTAssertTrue(p.allSucceeded)
     }
 }
+
+@MainActor
+final class PackageUpgradeTests: XCTestCase {
+    func testUpgradeSelectedGroupsByKind() async {
+        let runner = FakeRunner()
+        let outdatedArgs = ["outdated", "--json=v2", "--greedy"]
+        runner.stdout[outdatedArgs] = [#"{"formulae":[],"casks":[]}"#]
+        let d = UserDefaults(suiteName: "brewery.upgrade.tests")!
+        d.removePersistentDomain(forName: "brewery.upgrade.tests")
+        let p = UpgradePipeline(runner: runner, brewURL: URL(fileURLWithPath: "/opt/homebrew/bin/brew"), defaults: d)
+        await p.upgrade([
+            InstalledPackage(name: "git", version: "1", kind: .formula),
+            InstalledPackage(name: "ghostty", version: "1", kind: .cask),
+            InstalledPackage(name: "bat", version: "1", kind: .formula),
+        ])
+        XCTAssertEqual(runner.calls, [["upgrade", "git", "bat"], ["upgrade", "--cask", "ghostty"], outdatedArgs])
+        XCTAssertNil(p.lastError)
+    }
+}

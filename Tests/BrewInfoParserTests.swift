@@ -20,3 +20,12 @@ final class BrewInfoParserTests: XCTestCase {
         XCTAssertNil(try BrewInfoParser.parse(Data(#"{"formulae":[],"casks":[]}"#.utf8), kind: .formula))
     }
 }
+
+final class BrewInfoArtifactsTests: XCTestCase {
+    func testCaskAppNamesFromArtifacts() throws {
+        let json = #"{"formulae":[],"casks":[{"token":"android-studio","desc":"IDE","homepage":"h","version":"1","installed":"1","artifacts":[{"uninstall":[{"quit":"x"}]},{"app":["Android Studio.app"],"target":"/Applications/Android Studio.app"},{"zap":[{"trash":["a"]}]}]}]}"#
+        let i = try XCTUnwrap(try BrewInfoParser.parse(Data(json.utf8), kind: .cask))
+        XCTAssertEqual(i.appNames, ["Android Studio.app"])
+        XCTAssertTrue(i.isInstalled)
+    }
+}

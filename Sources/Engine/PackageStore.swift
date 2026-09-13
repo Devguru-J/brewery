@@ -19,7 +19,7 @@ final class PackageStore {
 
     private let runner: CommandRunning
     private let brewURL: URL?
-    private let caskroom: URL
+    let caskroom: URL
     private let fileManager: FileManager
 
     init(runner: CommandRunning, brewURL: URL?, caskroom: URL? = nil, fileManager: FileManager = .default) {

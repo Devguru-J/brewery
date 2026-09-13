@@ -9,6 +9,16 @@ extension UpgradePipeline {
         await runPackageCommands([args], failureLabel: "설치")
     }
 
+    /// 선택한 항목만 업그레이드. formula와 cask를 나눠 두 명령으로 실행한다.
+    func upgrade(_ items: [InstalledPackage]) async {
+        let formulae = items.filter { $0.kind == .formula }.map(\.name)
+        let casks = items.filter { $0.kind == .cask }.map(\.name)
+        var commands: [[String]] = []
+        if !formulae.isEmpty { commands.append(["upgrade"] + formulae) }
+        if !casks.isEmpty { commands.append(["upgrade", "--cask"] + casks) }
+        await runPackageCommands(commands, failureLabel: "업그레이드")
+    }
+
     func uninstall(_ items: [InstalledPackage]) async {
         let formulae = items.filter { $0.kind == .formula }.map(\.name)
         let casks = items.filter { $0.kind == .cask }.map(\.name)
