@@ -1,0 +1,63 @@
+name: brewery
+options:
+  bundleIdPrefix: com.tuesdaymorning
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_APP_SANDBOX: NO
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+targets:
+  brewery:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+      - Resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleName: brewery
+        CFBundleDisplayName: brewery
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: ""
+    entitlements:
+      path: Sources/brewery.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tuesdaymorning.brewery
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: NO
+  breweryTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+    dependencies:
+      - target: brewery
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tuesdaymorning.breweryTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  brewery:
+    build:
+      targets:
+        brewery: all
+        breweryTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - breweryTests
