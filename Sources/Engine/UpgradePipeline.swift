@@ -21,7 +21,10 @@ final class UpgradePipeline {
     var outdatedCount: Int { outdated.count }
     var allSucceeded: Bool { steps.allSatisfy { state(of: $0) == .succeeded } }
 
-    private let runner: CommandRunning
+    /// 설치·삭제가 끝난 뒤 호출. 설치 목록 갱신용.
+    var onPackagesChanged: (() -> Void)?
+
+    let runner: CommandRunning
     private let defaults: UserDefaults
     private var nextLineID = 0
     private let maxLogLines = 5000
@@ -123,7 +126,19 @@ final class UpgradePipeline {
         await refreshOutdated()
     }
 
-    private func ingest(_ line: String, _ stream: LogStream, _ stepID: Step.ID?) {
+    /// 설치·삭제 같은 단발 작업의 잠금. 단계 상태는 건드리지 않는다.
+    func beginAction() {
+        isRunning = true
+        lastError = nil
+    }
+
+    func endAction() {
+        isRunning = false
+    }
+
+    func setError(_ message: String) { lastError = message }
+
+    func ingest(_ line: String, _ stream: LogStream, _ stepID: Step.ID?) {
         append(line, stream, stepID)
         let lower = line.lowercased()
         if lower.contains("sudo"),
@@ -132,7 +147,7 @@ final class UpgradePipeline {
         }
     }
 
-    private func append(_ text: String, _ stream: LogStream, _ stepID: Step.ID?) {
+    func append(_ text: String, _ stream: LogStream, _ stepID: Step.ID?) {
         nextLineID += 1
         log.append(LogLine(id: nextLineID, text: text, stream: stream, stepID: stepID))
         if log.count > maxLogLines {
