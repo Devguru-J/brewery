@@ -32,12 +32,12 @@ struct HeroPanel: View {
     }
 
     private var statusText: String {
-        if !pipeline.brewAvailable { return "Homebrew를 찾을 수 없습니다. https://brew.sh 에서 설치하세요." }
-        if let step = pipeline.currentStep { return "실행 중 · \(step.command)" }
+        if !pipeline.brewAvailable { return L("hero.noBrew") }
+        if let step = pipeline.currentStep { return L("hero.running", step.command) }
         if let err = pipeline.lastError { return err }
-        if pipeline.isRefreshing { return "업데이트 확인 중…" }
-        if pipeline.allSucceeded && pipeline.lastRun != nil { return "모든 단계를 완료했습니다" }
-        return pipeline.outdatedCount == 0 ? "모두 최신입니다" : "업데이트 가능한 패키지 \(pipeline.outdatedCount)개"
+        if pipeline.isRefreshing { return L("hero.checking") }
+        if pipeline.allSucceeded && pipeline.lastRun != nil { return L("hero.allDone") }
+        return pipeline.outdatedCount == 0 ? L("hero.upToDate") : L("hero.outdatedCount", pipeline.outdatedCount)
     }
 
     private var statusColor: Color {
@@ -47,11 +47,11 @@ struct HeroPanel: View {
     }
 
     private var lastRunText: String {
-        guard let d = pipeline.lastRun else { return "아직 실행한 적 없음" }
+        guard let d = pipeline.lastRun else { return L("hero.neverRun") }
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LanguageSettings.shared.locale
         f.dateTimeStyle = .named
-        return "마지막 실행 \(f.localizedString(for: d, relativeTo: Date()))"
+        return L("hero.lastRun", f.localizedString(for: d, relativeTo: Date()))
     }
 }
 
@@ -67,7 +67,7 @@ struct RunButton: View {
                 Task { await pipeline.runAll() }
             }
         } label: {
-            Label(pipeline.isRunning ? "중단" : "전체 실행",
+            Label(pipeline.isRunning ? L("btn.stop") : L("btn.runAll"),
                   systemImage: pipeline.isRunning ? "stop.fill" : "mug.fill")
                 .font(theme.bodyFont.weight(.semibold))
                 .padding(.horizontal, 22)

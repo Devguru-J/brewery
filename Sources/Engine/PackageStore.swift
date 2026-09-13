@@ -47,7 +47,7 @@ final class PackageStore {
             searchResults = searchResults.map { SearchResult(name: $0.name, kind: $0.kind, isInstalled: ids.contains($0.id)) }
             lastError = nil
         } catch {
-            lastError = "설치 목록을 읽지 못했습니다: \(error.localizedDescription)"
+            lastError = L("store.listFailed", error.localizedDescription)
         }
     }
 
@@ -65,7 +65,7 @@ final class PackageStore {
                 + c.map { SearchResult(name: $0, kind: .cask, isInstalled: installedIDs.contains("cask:\($0)")) }
             lastError = nil
         } catch {
-            lastError = "검색 실패: \(error.localizedDescription)"
+            lastError = L("store.searchFailed", error.localizedDescription)
         }
     }
 
@@ -80,7 +80,7 @@ final class PackageStore {
             let text = try await capture(args)
             selectedInfo = try BrewInfoParser.parse(Data(text.utf8), kind: kind)
         } catch {
-            lastError = "정보를 읽지 못했습니다: \(error.localizedDescription)"
+            lastError = L("store.infoFailed", error.localizedDescription)
         }
     }
 
@@ -91,7 +91,7 @@ final class PackageStore {
     struct CommandFailed: LocalizedError {
         let arguments: [String]
         let code: Int32
-        var errorDescription: String? { "brew \(arguments.joined(separator: " ")) (종료 코드 \(code))" }
+        var errorDescription: String? { "brew \(arguments.joined(separator: " ")) (exit \(code))" }
     }
 
     private func capture(_ arguments: [String]) async throws -> String {

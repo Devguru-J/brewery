@@ -1,6 +1,7 @@
 name: brewery
 options:
   bundleIdPrefix: com.tuesdaymorning
+  developmentLanguage: en
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -23,6 +24,8 @@ targets:
       path: Sources/Info.plist
       properties:
         CFBundleName: brewery
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ko, ja, zh-Hans, es, de, fr]
         CFBundleDisplayName: brewery
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"

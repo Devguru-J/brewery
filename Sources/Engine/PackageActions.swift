@@ -6,7 +6,7 @@ extension UpgradePipeline {
         var args = ["install"]
         if kind == .cask { args.append("--cask") }
         args.append(name)
-        await runPackageCommands([args], failureLabel: "설치")
+        await runPackageCommands([args], failureLabel: "action.install")
     }
 
     /// 선택한 항목만 업그레이드. formula와 cask를 나눠 두 명령으로 실행한다.
@@ -16,7 +16,7 @@ extension UpgradePipeline {
         var commands: [[String]] = []
         if !formulae.isEmpty { commands.append(["upgrade"] + formulae) }
         if !casks.isEmpty { commands.append(["upgrade", "--cask"] + casks) }
-        await runPackageCommands(commands, failureLabel: "업그레이드")
+        await runPackageCommands(commands, failureLabel: "action.upgrade")
     }
 
     func uninstall(_ items: [InstalledPackage]) async {
@@ -25,7 +25,7 @@ extension UpgradePipeline {
         var commands: [[String]] = []
         if !formulae.isEmpty { commands.append(["uninstall"] + formulae) }
         if !casks.isEmpty { commands.append(["uninstall", "--cask"] + casks) }
-        await runPackageCommands(commands, failureLabel: "삭제")
+        await runPackageCommands(commands, failureLabel: "action.uninstall")
     }
 
     private func runPackageCommands(_ commands: [[String]], failureLabel: String) async {
@@ -41,11 +41,11 @@ extension UpgradePipeline {
                 }
                 for _ in 0..<3 { await Task.yield() }
                 if code != 0 {
-                    setError("\(failureLabel) 실패 (종료 코드 \(code))")
+                    setError(L("engine.stepFailed", L(failureLabel), code))
                     break
                 }
             } catch {
-                setError("\(failureLabel) 실패: \(error.localizedDescription)")
+                setError(L("engine.actionFailed", L(failureLabel), error.localizedDescription))
                 append("[brewery] \(error.localizedDescription)", .system, nil)
                 break
             }

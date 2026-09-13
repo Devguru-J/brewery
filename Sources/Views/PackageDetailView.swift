@@ -23,14 +23,14 @@ struct PackageDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name).font(theme.titleFont)
                     HStack(spacing: 8) {
-                        Text(kind == .cask ? "Cask" : "Formula")
+                        Text(kind == .cask ? L("detail.cask") : L("detail.formula"))
                             .font(theme.captionFont).foregroundStyle(.secondary)
                         if isInstalled {
-                            Label("설치됨", systemImage: "checkmark.circle.fill")
+                            Label(L("badge.installed"), systemImage: "checkmark.circle.fill")
                                 .font(theme.captionFont).foregroundStyle(.green)
                         }
                         if outdated != nil {
-                            Label("업데이트 있음", systemImage: "arrow.up.circle.fill")
+                            Label(L("detail.hasUpdate"), systemImage: "arrow.up.circle.fill")
                                 .font(theme.captionFont).foregroundStyle(theme.accent)
                         }
                     }
@@ -41,7 +41,7 @@ struct PackageDetailView: View {
             if store.isLoadingInfo && info == nil {
                 ProgressView().controlSize(.small)
             } else if let info {
-                Text(info.description.isEmpty ? "설명 없음" : info.description)
+                Text(info.description.isEmpty ? L("detail.noDesc") : info.description)
                     .font(theme.bodyFont)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -49,13 +49,13 @@ struct PackageDetailView: View {
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 8) {
                 if let installedVersion {
                     GridRow {
-                        Text("설치 버전").foregroundStyle(.secondary)
+                        Text(L("detail.installedVersion")).foregroundStyle(.secondary)
                         Text(installedVersion).font(theme.logFont)
                     }
                 }
                 if let outdated {
                     GridRow {
-                        Text("새 버전").foregroundStyle(.secondary)
+                        Text(L("detail.newVersion")).foregroundStyle(.secondary)
                         HStack(spacing: 6) {
                             Text(outdated.installedVersion).font(theme.logFont).foregroundStyle(.secondary)
                             Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondary)
@@ -64,13 +64,13 @@ struct PackageDetailView: View {
                     }
                 } else if let info, !isInstalled {
                     GridRow {
-                        Text("최신 버전").foregroundStyle(.secondary)
+                        Text(L("detail.latestVersion")).foregroundStyle(.secondary)
                         Text(info.version).font(theme.logFont)
                     }
                 }
                 if let info, let url = URL(string: info.homepage), !info.homepage.isEmpty {
                     GridRow {
-                        Text("홈페이지").foregroundStyle(.secondary)
+                        Text(L("detail.homepage")).foregroundStyle(.secondary)
                         Link(info.homepage, destination: url).lineLimit(1)
                     }
                 }
@@ -78,7 +78,7 @@ struct PackageDetailView: View {
             .font(theme.bodyFont)
 
             if outdated != nil {
-                Text("변경 내역은 brew가 제공하지 않습니다. 홈페이지의 릴리스 노트를 확인하세요.")
+                Text(L("detail.changelogHint"))
                     .font(theme.captionFont).foregroundStyle(.secondary)
             }
 
@@ -89,7 +89,7 @@ struct PackageDetailView: View {
                     Button {
                         Task { await pipeline.install(name: name, kind: kind) }
                     } label: {
-                        Label("설치", systemImage: "arrow.down.circle.fill")
+                        Label(L("btn.install"), systemImage: "arrow.down.circle.fill")
                             .padding(.horizontal, 12).padding(.vertical, 6)
                     }
                     .buttonStyle(.borderedProminent).tint(theme.accent).controlSize(.large)
@@ -99,7 +99,7 @@ struct PackageDetailView: View {
                     Button {
                         Task { await pipeline.upgrade([InstalledPackage(name: name, version: installedVersion, kind: kind)]) }
                     } label: {
-                        Label("업그레이드", systemImage: "arrow.up.circle.fill")
+                        Label(L("btn.upgrade"), systemImage: "arrow.up.circle.fill")
                             .padding(.horizontal, 12).padding(.vertical, 6)
                     }
                     .buttonStyle(.borderedProminent).tint(theme.accent).controlSize(.large)
@@ -109,16 +109,16 @@ struct PackageDetailView: View {
                     Button(role: .destructive) {
                         confirmingDelete = true
                     } label: {
-                        Label("삭제", systemImage: "trash")
+                        Label(L("btn.delete"), systemImage: "trash")
                             .padding(.horizontal, 12).padding(.vertical, 6)
                     }
                     .controlSize(.large)
                     .disabled(pipeline.isBusy)
-                    .confirmationDialog("\(name)을(를) 삭제할까요?", isPresented: $confirmingDelete, titleVisibility: .visible) {
-                        Button("삭제", role: .destructive) {
+                    .confirmationDialog(L("detail.confirmDelete", name), isPresented: $confirmingDelete, titleVisibility: .visible) {
+                        Button(L("btn.delete"), role: .destructive) {
                             Task { await pipeline.uninstall([InstalledPackage(name: name, version: installedVersion, kind: kind)]) }
                         }
-                        Button("취소", role: .cancel) {}
+                        Button(L("btn.cancel"), role: .cancel) {}
                     }
                 }
             }

@@ -45,7 +45,7 @@ final class UpgradePipeline {
 
     func cancel() {
         runner.terminate()
-        append("[brewery] 중단을 요청했습니다.", .system, currentStep?.id)
+        append(L("engine.cancelRequested"), .system, currentStep?.id)
     }
 
     func clearLog() { log.removeAll() }
@@ -62,12 +62,12 @@ final class UpgradePipeline {
                 if stream == .stdout { buffer.append(line) }
             }
             guard code == 0 else {
-                append("[brewery] brew outdated 실패 (종료 코드 \(code))", .system, nil)
+                append(L("engine.outdatedFailed", code), .system, nil)
                 return
             }
             outdated = try BrewOutdatedParser.parse(Data(buffer.joined().utf8))
         } catch {
-            append("[brewery] 목록 갱신 실패: \(error.localizedDescription)", .system, nil)
+            append(L("engine.refreshFailed", error.localizedDescription), .system, nil)
         }
     }
 
@@ -109,7 +109,7 @@ final class UpgradePipeline {
                     states[step.id] = .succeeded
                 } else {
                     states[step.id] = .failed(exitCode: code)
-                    lastError = "\(step.title) 실패 (종료 코드 \(code))"
+                    lastError = L("engine.stepFailed", step.title, code)
                     failed = true
                 }
             } catch {
@@ -143,7 +143,7 @@ final class UpgradePipeline {
         let lower = line.lowercased()
         if lower.contains("sudo"),
            lower.contains("password") || lower.contains("terminal is required") || lower.contains("askpass") {
-            append("[brewery] 이 항목은 관리자 비밀번호가 필요합니다. 터미널에서 직접 실행하세요.", .system, stepID)
+            append(L("engine.sudoHint"), .system, stepID)
         }
     }
 

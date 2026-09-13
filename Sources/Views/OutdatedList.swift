@@ -10,7 +10,7 @@ struct OutdatedList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("업데이트 가능")
+                Text(L("outdated.title"))
                     .font(theme.bodyFont.weight(.semibold))
                 if pipeline.outdatedCount > 0 {
                     Text("\(pipeline.outdatedCount)")
@@ -31,7 +31,7 @@ struct OutdatedList: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(pipeline.isBusy || !pipeline.brewAvailable)
-                .help("목록 새로고침")
+                .help(L("outdated.refresh"))
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
 
@@ -39,9 +39,9 @@ struct OutdatedList: View {
 
             if pipeline.outdated.isEmpty {
                 ContentUnavailableView(
-                    pipeline.isRefreshing ? "확인 중…" : "모두 최신입니다",
+                    pipeline.isRefreshing ? L("outdated.checking") : L("hero.upToDate"),
                     systemImage: pipeline.isRefreshing ? "hourglass" : "checkmark.seal.fill",
-                    description: Text(pipeline.brewAvailable ? "brew upgrade --greedy 기준으로 확인했습니다" : "Homebrew가 설치되어 있지 않습니다")
+                    description: Text(pipeline.brewAvailable ? L("outdated.basis") : L("outdated.noBrew"))
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -81,7 +81,7 @@ struct PackageRow: View {
                 Text(package.currentVersion).foregroundStyle(theme.accent)
             }
             .font(theme.logFont)
-            Button("업그레이드") {
+            Button(L("btn.upgrade")) {
                 Task { await pipeline.upgrade([InstalledPackage(name: package.name, version: package.installedVersion, kind: package.kind)]) }
             }
             .buttonStyle(.bordered)

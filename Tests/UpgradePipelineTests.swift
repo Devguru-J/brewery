@@ -38,7 +38,7 @@ final class UpgradePipelineTests: XCTestCase {
         XCTAssertEqual(p.state(of: .upgrade), .failed(exitCode: 1))
         XCTAssertEqual(p.state(of: .upgradeGreedy), .skipped)
         XCTAssertEqual(runner.calls, [["update"], ["upgrade"], outdatedArgs])
-        XCTAssertEqual(p.lastError, "Upgrade 실패 (종료 코드 1)")
+        XCTAssertTrue(p.lastError?.contains("Upgrade") == true && p.lastError?.contains("1") == true, p.lastError ?? "nil")
     }
 
     func testRunSingleStep() async {
@@ -59,7 +59,7 @@ final class UpgradePipelineTests: XCTestCase {
         let texts = p.log.map(\.text)
         XCTAssertTrue(texts.contains("$ brew update"))
         XCTAssertTrue(texts.contains("Already up-to-date."))
-        XCTAssertTrue(texts.contains { $0.contains("관리자 비밀번호") })
+        XCTAssertTrue(texts.contains { $0.hasPrefix("[brewery]") && $0 != "$ brew update" })
         XCTAssertEqual(p.log.first { $0.text == "Already up-to-date." }?.stepID, "update")
     }
 

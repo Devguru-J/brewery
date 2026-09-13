@@ -44,7 +44,7 @@ final class BrewRunner: CommandRunning, @unchecked Sendable {
                 onLine(line, stream)
             }
         } catch {
-            onLine("[brewery] 출력 읽기 오류: \(error.localizedDescription)", .system)
+            onLine("[brewery] output read error: \(error.localizedDescription)", .system)
         }
     }
 }

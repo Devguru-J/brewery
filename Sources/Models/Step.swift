@@ -5,16 +5,17 @@ struct Step: Identifiable, Hashable, Sendable {
     let title: String
     let arguments: [String]
     let symbol: String
+    /// 로컬라이즈 키
     let summary: String
 
     var command: String { (["brew"] + arguments).joined(separator: " ") }
 
     static let update = Step(id: "update", title: "Update", arguments: ["update"],
-                             symbol: "arrow.triangle.2.circlepath", summary: "패키지 목록을 최신으로 받아옵니다")
+                             symbol: "arrow.triangle.2.circlepath", summary: "step.update.summary")
     static let upgrade = Step(id: "upgrade", title: "Upgrade", arguments: ["upgrade"],
-                              symbol: "shippingbox.fill", summary: "설치된 formula와 cask를 업그레이드합니다")
+                              symbol: "shippingbox.fill", summary: "step.upgrade.summary")
     static let upgradeGreedy = Step(id: "upgrade-greedy", title: "Upgrade Greedy", arguments: ["upgrade", "--greedy"],
-                                    symbol: "sparkles", summary: "자동 업데이트 cask까지 모두 업그레이드합니다")
+                                    symbol: "sparkles", summary: "step.greedy.summary")
     static let all: [Step] = [.update, .upgrade, .upgradeGreedy]
 }
 

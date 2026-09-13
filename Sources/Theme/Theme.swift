@@ -9,8 +9,8 @@ enum ProgressStyle { case ring, cursor, foam }
 
 struct Theme {
     let id: ThemeID
-    let name: String
-    let tagline: String
+    let name: String       // 로컬라이즈 키
+    let tagline: String    // 로컬라이즈 키
     let colorScheme: ColorScheme?
     let accent: Color
     let windowBackground: Color?      // nil이면 시스템 창 배경 + 재질
@@ -29,7 +29,7 @@ struct Theme {
     let glow: Bool
 
     static let native = Theme(
-        id: .native, name: "macOS 순정", tagline: "시스템 재질과 SF Symbols",
+        id: .native, name: "theme.native.name", tagline: "theme.native.tagline",
         colorScheme: nil,
         accent: .accentColor,
         windowBackground: nil,
@@ -47,7 +47,7 @@ struct Theme {
         progress: .ring, glow: false)
 
     static let terminal = Theme(
-        id: .terminal, name: "다크 터미널", tagline: "검정 바탕, 초록 글씨, 글로우",
+        id: .terminal, name: "theme.terminal.name", tagline: "theme.terminal.tagline",
         colorScheme: .dark,
         accent: Color(red: 0.35, green: 1.0, blue: 0.55),
         windowBackground: Color(red: 0.04, green: 0.05, blue: 0.05),
@@ -65,7 +65,7 @@ struct Theme {
         progress: .cursor, glow: true)
 
     static let taproom = Theme(
-        id: .taproom, name: "맥주집", tagline: "호박색 팔레트와 거품",
+        id: .taproom, name: "theme.taproom.name", tagline: "theme.taproom.tagline",
         colorScheme: .light,
         accent: Color(red: 0.85, green: 0.52, blue: 0.12),
         windowBackground: Color(red: 0.98, green: 0.95, blue: 0.89),

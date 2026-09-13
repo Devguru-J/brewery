@@ -14,8 +14,8 @@ struct LogConsole: View {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.right")
                             .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                        Text("로그")
-                        Text("\(pipeline.log.count)줄").foregroundStyle(.secondary)
+                        Text(L("log.title"))
+                        Text(L("log.lines", pipeline.log.count)).foregroundStyle(.secondary)
                     }
                     .font(theme.bodyFont.weight(.semibold))
                 }
@@ -26,9 +26,9 @@ struct LogConsole: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                 } label: { Image(systemName: "doc.on.doc") }
-                .buttonStyle(.borderless).help("로그 복사")
+                .buttonStyle(.borderless).help(L("log.copy"))
                 Button { pipeline.clearLog() } label: { Image(systemName: "trash") }
-                    .buttonStyle(.borderless).help("로그 지우기")
+                    .buttonStyle(.borderless).help(L("log.clear"))
                     .disabled(pipeline.isRunning)
             }
             .padding(.horizontal, 16).padding(.vertical, 10)

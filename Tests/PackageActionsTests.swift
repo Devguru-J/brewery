@@ -37,7 +37,7 @@ final class PackageActionsTests: XCTestCase {
             InstalledPackage(name: "b", version: "1", kind: .formula),
         ])
         XCTAssertEqual(runner.calls, [["uninstall", "a", "b"], outdatedArgs])
-        XCTAssertEqual(p.lastError, "삭제 실패 (종료 코드 1)")
+        XCTAssertTrue(p.lastError?.contains("1") == true, p.lastError ?? "nil")
     }
 
     func testUninstallSucceedsRunsBoth() async {

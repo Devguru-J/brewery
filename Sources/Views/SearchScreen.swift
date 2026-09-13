@@ -15,13 +15,13 @@ struct SearchScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("brew search — 이름을 입력하고 Enter", text: $query)
+                TextField(L("search.placeholder"), text: $query)
                     .textFieldStyle(.plain)
                     .font(theme.bodyFont)
                     .onSubmit { Task { await store.search(query) } }
                 if store.isSearching { ProgressView().controlSize(.small) }
                 else if !store.lastQuery.isEmpty {
-                    Text("\(store.searchResults.count)개").font(theme.captionFont).foregroundStyle(.secondary)
+                    Text(L("search.count", store.searchResults.count)).font(theme.captionFont).foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
@@ -43,9 +43,9 @@ struct SearchScreen: View {
     private var resultsList: some View {
         if store.searchResults.isEmpty {
             ContentUnavailableView(
-                store.lastQuery.isEmpty ? "검색어를 입력하세요" : (store.isSearching ? "검색 중…" : "결과 없음"),
+                store.lastQuery.isEmpty ? L("search.prompt") : (store.isSearching ? L("search.searching") : L("installed.noResults")),
                 systemImage: "magnifyingglass",
-                description: Text(store.lastQuery.isEmpty ? "formula와 cask를 함께 찾습니다" : "“\(store.lastQuery)”에 해당하는 패키지가 없습니다")
+                description: Text(store.lastQuery.isEmpty ? L("search.hintEmpty") : L("search.hintNone", store.lastQuery))
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -68,7 +68,7 @@ struct SearchScreen: View {
             let outdated = pipeline.outdated.first { $0.id == r.id }
             PackageDetailView(name: r.name, kind: r.kind, installedVersion: installed?.version, outdated: outdated)
         } else {
-            ContentUnavailableView("패키지를 선택하세요", systemImage: "info.circle")
+            ContentUnavailableView(L("installed.pick"), systemImage: "info.circle")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -89,7 +89,7 @@ struct SearchRow: View {
             Text(result.name).font(theme.bodyFont)
             Spacer()
             if result.isInstalled {
-                Label("설치됨", systemImage: "checkmark.circle.fill")
+                Label(L("badge.installed"), systemImage: "checkmark.circle.fill")
                     .font(theme.captionFont).foregroundStyle(.green)
             }
         }

@@ -9,6 +9,7 @@ struct breweryApp: App {
     @AppStorage("theme") private var themeID: ThemeID = .native
 
     private var theme: Theme { Theme.named(themeID) }
+    private var language: String { LanguageSettings.shared.language }
 
     init() {
         let brew = BrewLocator.locate()
@@ -27,10 +28,12 @@ struct breweryApp: App {
     var body: some Scene {
         Window("brewery", id: "main") {
             RootView()
+                .id(language)
                 .environment(pipeline)
                 .environment(store)
                 .environment(icons)
                 .environment(\.theme, theme)
+                .environment(\.locale, LanguageSettings.shared.locale)
                 .preferredColorScheme(theme.colorScheme)
                 .onAppear { AppDelegate.onTerminate = { [pipeline] in pipeline.cancel() } }
         }
@@ -39,6 +42,7 @@ struct breweryApp: App {
 
         MenuBarExtra {
             MenuBarPanel()
+                .id(language)
                 .environment(pipeline)
                 .environment(\.theme, theme)
         } label: {
@@ -51,6 +55,7 @@ struct breweryApp: App {
 
         Settings {
             SettingsView()
+                .id(language)
                 .environment(\.theme, theme)
         }
     }

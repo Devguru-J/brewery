@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>brewery</string>
 	<key>CFBundleExecutable</key>
@@ -12,6 +12,16 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ko</string>
+		<string>ja</string>
+		<string>zh-Hans</string>
+		<string>es</string>
+		<string>de</string>
+		<string>fr</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>brewery</string>
 	<key>CFBundlePackageType</key>

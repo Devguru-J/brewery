@@ -35,12 +35,12 @@ struct StepCard: View {
             Text(step.command)
                 .font(theme.logFont)
                 .foregroundStyle(.secondary)
-            Text(step.summary)
+            Text(L(step.summary))
                 .font(theme.captionFont)
                 .foregroundStyle(.secondary)
                 .lineLimit(2, reservesSpace: true)
             Spacer(minLength: 0)
-            Button("이 단계만 실행") {
+            Button(L("btn.runStep")) {
                 Task { await pipeline.run(step) }
             }
             .buttonStyle(.bordered)
@@ -86,17 +86,17 @@ struct StepStatusBadge: View {
     var body: some View {
         switch state {
         case .idle:
-            Text("대기").font(theme.captionFont).foregroundStyle(.secondary)
+            Text(L("state.idle")).font(theme.captionFont).foregroundStyle(.secondary)
         case .running:
             ProgressIndicator()
         case .succeeded:
-            Label("완료", systemImage: "checkmark.circle.fill")
+            Label(L("state.done"), systemImage: "checkmark.circle.fill")
                 .font(theme.captionFont).foregroundStyle(.green)
         case .skipped:
-            Label("건너뜀", systemImage: "minus.circle")
+            Label(L("state.skipped"), systemImage: "minus.circle")
                 .font(theme.captionFont).foregroundStyle(.secondary)
         case .failed(let code):
-            Label("실패 (\(code))", systemImage: "xmark.octagon.fill")
+            Label(L("state.failed", code), systemImage: "xmark.octagon.fill")
                 .font(theme.captionFont).foregroundStyle(.red)
         }
     }

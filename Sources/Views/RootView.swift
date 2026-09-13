@@ -5,9 +5,9 @@ enum Screen: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .upgrade: return "업그레이드"
-        case .installed: return "설치된 패키지"
-        case .search: return "검색"
+        case .upgrade: return L("sidebar.upgrade")
+        case .installed: return L("sidebar.installed")
+        case .search: return L("sidebar.search")
         }
     }
     var symbol: String {
@@ -25,25 +25,44 @@ struct RootView: View {
     @Environment(\.theme) private var theme
     @State private var screen: Screen? = .upgrade
     @State private var logExpanded = true
+    @State private var showAppearance = false
+    @State private var showAppearanceFromSidebar = false
 
     var body: some View {
         NavigationSplitView {
-            List(Screen.allCases, selection: $screen) { s in
-                Label {
-                    HStack {
-                        Text(s.title)
-                        Spacer()
-                        badge(for: s)
+            VStack(spacing: 0) {
+                List(Screen.allCases, selection: $screen) { s in
+                    Label {
+                        HStack {
+                            Text(s.title)
+                            Spacer()
+                            badge(for: s)
+                        }
+                    } icon: {
+                        Image(systemName: s.symbol).foregroundStyle(theme.accent)
                     }
-                } icon: {
-                    Image(systemName: s.symbol).foregroundStyle(theme.accent)
+                    .font(theme.bodyFont)
+                    .tag(s)
                 }
-                .font(theme.bodyFont)
-                .tag(s)
+                .scrollContentBackground(.hidden)
+                Divider()
+                Button {
+                    showAppearanceFromSidebar.toggle()
+                } label: {
+                    Label(L("sidebar.appearance"), systemImage: "paintpalette")
+                        .font(theme.bodyFont)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(8)
+                .popover(isPresented: $showAppearanceFromSidebar, arrowEdge: .trailing) {
+                    AppearancePanel(compact: true).padding(20).frame(width: 520)
+                }
             }
-            .scrollContentBackground(.hidden)
             .background(sidebarBackground)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
+            .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 300)
         } detail: {
             VStack(spacing: 16) {
                 switch screen ?? .upgrade {
@@ -57,6 +76,19 @@ struct RootView: View {
             .padding(20)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(background)
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showAppearance.toggle()
+                } label: {
+                    Label(L("appearance.title"), systemImage: "paintpalette")
+                }
+                .help(L("appearance.help"))
+                .popover(isPresented: $showAppearance, arrowEdge: .bottom) {
+                    AppearancePanel(compact: true).padding(20).frame(width: 520)
+                }
+            }
         }
         .frame(minWidth: 960, minHeight: 840)
         .task {

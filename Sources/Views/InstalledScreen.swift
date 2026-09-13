@@ -43,13 +43,13 @@ struct InstalledScreen: View {
         .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius, style: .continuous))
         .task { if store.installed.isEmpty { await store.refreshInstalled() } }
-        .confirmationDialog("선택한 \(selection.count)개를 삭제할까요?", isPresented: $confirmingDelete, titleVisibility: .visible) {
-            Button("삭제", role: .destructive) {
+        .confirmationDialog(L("installed.confirmDelete", selection.count), isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button(L("btn.delete"), role: .destructive) {
                 let items = selectedPackages
                 selection.removeAll()
                 Task { await pipeline.uninstall(items) }
             }
-            Button("취소", role: .cancel) {}
+            Button(L("btn.cancel"), role: .cancel) {}
         } message: {
             Text(selectedPackages.map(\.name).joined(separator: ", "))
         }
@@ -58,7 +58,7 @@ struct InstalledScreen: View {
     private var toolbar: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                Picker("종류", selection: $kindTab) {
+                Picker("kind", selection: $kindTab) {
                     Text("Formulae \(store.formulae.count)").tag(PackageKind.formula)
                     Text("Casks \(store.casks.count)").tag(PackageKind.cask)
                 }
@@ -66,7 +66,7 @@ struct InstalledScreen: View {
                 .labelsHidden()
                 .frame(width: 240)
                 Toggle(isOn: $onlyOutdated) {
-                    Text("업데이트만")
+                    Text(L("installed.onlyOutdated"))
                     if outdatedInstalledCount > 0 {
                         Text("\(outdatedInstalledCount)")
                             .font(theme.captionFont.weight(.bold))
@@ -87,10 +87,10 @@ struct InstalledScreen: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(store.isLoadingInstalled || pipeline.isBusy)
-                .help("목록 새로고침")
+                .help(L("outdated.refresh"))
             }
             HStack(spacing: 12) {
-                TextField("이름으로 필터", text: $filter)
+                TextField(L("installed.filter"), text: $filter)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 260)
                 Spacer()
@@ -98,7 +98,7 @@ struct InstalledScreen: View {
                     let items = selectedOutdated
                     Task { await pipeline.upgrade(items) }
                 } label: {
-                    Label("선택 업그레이드 (\(selectedOutdated.count))", systemImage: "arrow.up.circle")
+                    Label(L("installed.upgradeSelected", selectedOutdated.count), systemImage: "arrow.up.circle")
                         .fixedSize()
                 }
                 .buttonStyle(.borderedProminent).tint(theme.accent)
@@ -106,7 +106,7 @@ struct InstalledScreen: View {
                 Button(role: .destructive) {
                     confirmingDelete = true
                 } label: {
-                    Label("선택 삭제 (\(selection.count))", systemImage: "trash")
+                    Label(L("installed.deleteSelected", selection.count), systemImage: "trash")
                         .fixedSize()
                 }
                 .disabled(selection.isEmpty || pipeline.isBusy)
@@ -119,13 +119,13 @@ struct InstalledScreen: View {
     private var list: some View {
         if store.installed.isEmpty {
             ContentUnavailableView(
-                store.isLoadingInstalled ? "불러오는 중…" : "설치된 패키지가 없습니다",
+                store.isLoadingInstalled ? L("installed.loading") : L("installed.empty"),
                 systemImage: store.isLoadingInstalled ? "hourglass" : "shippingbox",
                 description: Text(store.lastError ?? "")
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if filtered.isEmpty {
-            ContentUnavailableView(onlyOutdated && filter.isEmpty ? "모두 최신입니다" : "결과 없음",
+            ContentUnavailableView(onlyOutdated && filter.isEmpty ? L("hero.upToDate") : L("installed.noResults"),
                                    systemImage: onlyOutdated ? "checkmark.seal.fill" : "magnifyingglass")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -135,9 +135,9 @@ struct InstalledScreen: View {
                 } header: {
                     HStack {
                         Text(kindTab == .cask ? "Casks" : "Formulae")
-                        Text("\(filtered.count)개").foregroundStyle(.secondary)
+                        Text(L("installed.count", filtered.count)).foregroundStyle(.secondary)
                         if outdatedCount(kindTab) > 0 {
-                            Text("업데이트 \(outdatedCount(kindTab))")
+                            Text(L("installed.updatesBadge", outdatedCount(kindTab)))
                                 .font(theme.captionFont.weight(.semibold))
                                 .padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Capsule().fill(theme.accent.opacity(0.18)))
@@ -155,12 +155,12 @@ struct InstalledScreen: View {
         if let p = focused {
             PackageDetailView(name: p.name, kind: p.kind, installedVersion: p.version, outdated: outdatedByID[p.id])
         } else if selection.count > 1 {
-            ContentUnavailableView("\(selection.count)개 선택됨", systemImage: "checklist",
-                                   description: Text("위 버튼으로 선택한 항목을 업그레이드하거나 삭제합니다"))
+            ContentUnavailableView(L("installed.selected", selection.count), systemImage: "checklist",
+                                   description: Text(L("installed.selectedHint")))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ContentUnavailableView("패키지를 선택하세요", systemImage: "info.circle",
-                                   description: Text("설명, 버전, 업데이트 여부를 보여줍니다"))
+            ContentUnavailableView(L("installed.pick"), systemImage: "info.circle",
+                                   description: Text(L("installed.pickHint")))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -182,7 +182,7 @@ struct InstalledRow: View {
             PackageIcon(name: package.name, kind: package.kind, size: 22)
             Text(package.name).font(theme.bodyFont).lineLimit(1)
             if let outdated {
-                Text("업데이트")
+                Text(L("badge.update"))
                     .font(theme.captionFont.weight(.semibold))
                     .padding(.horizontal, 6).padding(.vertical, 1)
                     .background(Capsule().fill(theme.accent.opacity(0.18)))
