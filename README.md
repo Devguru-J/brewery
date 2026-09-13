@@ -38,10 +38,10 @@ xcodebuild -scheme brewery -destination 'platform=macOS' -derivedDataPath build 
 
 ## 앱 아이콘
 
-원본은 `Resources/AppIcon/brewery_app_icon.png`. 바꾸려면 새 이미지를 같은 자리에 두고 아래를 실행한다.
+원본은 `assets/brewery_app_icon.png`. 바꾸려면 새 이미지를 같은 자리에 두고 아래를 실행한다.
 
 ```bash
-swift scripts/fit-icon.swift Resources/AppIcon/brewery_app_icon.png /tmp/icon-1024.png
+swift scripts/fit-icon.swift assets/brewery_app_icon.png /tmp/icon-1024.png
 for s in 16 32 64 128 256 512 1024; do
   sips -z $s $s /tmp/icon-1024.png --out Resources/Assets.xcassets/AppIcon.appiconset/icon_$s.png
 done
