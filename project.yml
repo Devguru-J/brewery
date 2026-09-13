@@ -28,7 +28,7 @@ targets:
         CFBundleVersion: "1"
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: "14.0"
-        NSHumanReadableCopyright: ""
+        NSHumanReadableCopyright: "© 2026 Memory(기억) · bymemory.dev"
     entitlements:
       path: Sources/brewery.entitlements
       properties:

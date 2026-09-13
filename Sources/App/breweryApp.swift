@@ -34,7 +34,8 @@ struct breweryApp: App {
                 .preferredColorScheme(theme.colorScheme)
                 .onAppear { AppDelegate.onTerminate = { [pipeline] in pipeline.cancel() } }
         }
-        .defaultSize(width: 1080, height: 800)
+        .defaultSize(width: 1100, height: 900)
+        .defaultPosition(.center)
 
         MenuBarExtra {
             MenuBarPanel()

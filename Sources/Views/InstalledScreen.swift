@@ -6,6 +6,7 @@ struct InstalledScreen: View {
     @Environment(\.theme) private var theme
     @State private var filter = ""
     @State private var onlyOutdated = false
+    @State private var kindTab: PackageKind = .formula
     @State private var selection = Set<InstalledPackage.ID>()
     @State private var confirmingDelete = false
 
@@ -16,11 +17,15 @@ struct InstalledScreen: View {
         let q = filter.trimmingCharacters(in: .whitespaces).lowercased()
         let outdated = outdatedByID
         return store.installed.filter {
-            (q.isEmpty || $0.name.lowercased().contains(q)) && (!onlyOutdated || outdated[$0.id] != nil)
+            $0.kind == kindTab
+                && (q.isEmpty || $0.name.lowercased().contains(q))
+                && (!onlyOutdated || outdated[$0.id] != nil)
         }
     }
-    private var formulae: [InstalledPackage] { filtered.filter { $0.kind == .formula } }
-    private var casks: [InstalledPackage] { filtered.filter { $0.kind == .cask } }
+    private func outdatedCount(_ kind: PackageKind) -> Int {
+        let o = outdatedByID
+        return store.installed.filter { $0.kind == kind && o[$0.id] != nil }.count
+    }
     private var selectedPackages: [InstalledPackage] { store.installed.filter { selection.contains($0.id) } }
     private var selectedOutdated: [InstalledPackage] { selectedPackages.filter { outdatedByID[$0.id] != nil } }
     private var focused: InstalledPackage? { selection.count == 1 ? selectedPackages.first : nil }
@@ -51,50 +56,61 @@ struct InstalledScreen: View {
     }
 
     private var toolbar: some View {
-        HStack(spacing: 12) {
-            TextField("이름으로 필터", text: $filter)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 220)
-            Toggle(isOn: $onlyOutdated) {
-                Text("업데이트만")
-                if outdatedInstalledCount > 0 {
-                    Text("\(outdatedInstalledCount)")
-                        .font(theme.captionFont.weight(.bold))
-                        .padding(.horizontal, 6).padding(.vertical, 1)
-                        .background(Capsule().fill(theme.accent.opacity(0.18)))
-                        .foregroundStyle(theme.accent)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Picker("종류", selection: $kindTab) {
+                    Text("Formulae \(store.formulae.count)").tag(PackageKind.formula)
+                    Text("Casks \(store.casks.count)").tag(PackageKind.cask)
                 }
-            }
-            .toggleStyle(.button)
-            Text("formula \(store.formulae.count) · cask \(store.casks.count)")
-                .font(theme.captionFont)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Button {
-                Task {
-                    await store.refreshInstalled()
-                    await pipeline.refreshOutdated()
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 240)
+                Toggle(isOn: $onlyOutdated) {
+                    Text("업데이트만")
+                    if outdatedInstalledCount > 0 {
+                        Text("\(outdatedInstalledCount)")
+                            .font(theme.captionFont.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(Capsule().fill(theme.accent.opacity(0.18)))
+                            .foregroundStyle(theme.accent)
+                    }
                 }
-            } label: {
-                if store.isLoadingInstalled || pipeline.isRefreshing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.clockwise") }
+                .toggleStyle(.button)
+                Spacer()
+                Button {
+                    Task {
+                        await store.refreshInstalled()
+                        await pipeline.refreshOutdated()
+                    }
+                } label: {
+                    if store.isLoadingInstalled || pipeline.isRefreshing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.clockwise") }
+                }
+                .buttonStyle(.borderless)
+                .disabled(store.isLoadingInstalled || pipeline.isBusy)
+                .help("목록 새로고침")
             }
-            .buttonStyle(.borderless)
-            .disabled(store.isLoadingInstalled || pipeline.isBusy)
-            .help("목록 새로고침")
-            Button {
-                let items = selectedOutdated
-                Task { await pipeline.upgrade(items) }
-            } label: {
-                Label("업그레이드 (\(selectedOutdated.count))", systemImage: "arrow.up.circle")
+            HStack(spacing: 12) {
+                TextField("이름으로 필터", text: $filter)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 260)
+                Spacer()
+                Button {
+                    let items = selectedOutdated
+                    Task { await pipeline.upgrade(items) }
+                } label: {
+                    Label("선택 업그레이드 (\(selectedOutdated.count))", systemImage: "arrow.up.circle")
+                        .fixedSize()
+                }
+                .buttonStyle(.borderedProminent).tint(theme.accent)
+                .disabled(selectedOutdated.isEmpty || pipeline.isBusy)
+                Button(role: .destructive) {
+                    confirmingDelete = true
+                } label: {
+                    Label("선택 삭제 (\(selection.count))", systemImage: "trash")
+                        .fixedSize()
+                }
+                .disabled(selection.isEmpty || pipeline.isBusy)
             }
-            .buttonStyle(.borderedProminent).tint(theme.accent)
-            .disabled(selectedOutdated.isEmpty || pipeline.isBusy)
-            Button(role: .destructive) {
-                confirmingDelete = true
-            } label: {
-                Label("삭제 (\(selection.count))", systemImage: "trash")
-            }
-            .disabled(selection.isEmpty || pipeline.isBusy)
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
     }
@@ -114,14 +130,19 @@ struct InstalledScreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             List(selection: $selection) {
-                if !formulae.isEmpty {
-                    Section("Formulae (\(formulae.count))") {
-                        ForEach(formulae) { InstalledRow(package: $0, outdated: outdatedByID[$0.id]) }
-                    }
-                }
-                if !casks.isEmpty {
-                    Section("Casks (\(casks.count))") {
-                        ForEach(casks) { InstalledRow(package: $0, outdated: outdatedByID[$0.id]) }
+                Section {
+                    ForEach(filtered) { InstalledRow(package: $0, outdated: outdatedByID[$0.id]) }
+                } header: {
+                    HStack {
+                        Text(kindTab == .cask ? "Casks" : "Formulae")
+                        Text("\(filtered.count)개").foregroundStyle(.secondary)
+                        if outdatedCount(kindTab) > 0 {
+                            Text("업데이트 \(outdatedCount(kindTab))")
+                                .font(theme.captionFont.weight(.semibold))
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(Capsule().fill(theme.accent.opacity(0.18)))
+                                .foregroundStyle(theme.accent)
+                        }
                     }
                 }
             }
@@ -159,7 +180,7 @@ struct InstalledRow: View {
     var body: some View {
         HStack(spacing: 10) {
             PackageIcon(name: package.name, kind: package.kind, size: 22)
-            Text(package.name).font(theme.bodyFont)
+            Text(package.name).font(theme.bodyFont).lineLimit(1)
             if let outdated {
                 Text("업데이트")
                     .font(theme.captionFont.weight(.semibold))
@@ -176,6 +197,8 @@ struct InstalledRow: View {
             } else {
                 Spacer()
                 Text(package.version).font(theme.logFont).foregroundStyle(.secondary)
+                    .lineLimit(1).truncationMode(.middle)
+                    .frame(maxWidth: 200, alignment: .trailing)
             }
         }
         .padding(.vertical, 2)

@@ -58,7 +58,7 @@ struct RootView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(background)
         }
-        .frame(minWidth: 900, minHeight: 720)
+        .frame(minWidth: 960, minHeight: 840)
         .task {
             await pipeline.refreshOutdated()
             await store.refreshInstalled()
