@@ -59,7 +59,15 @@ xcodebuild -scheme brewery -destination 'platform=macOS' -derivedDataPath build 
 ## 릴리스 만들기
 
 ```bash
-scripts/release.sh 1.0.0      # Release 빌드 → build/release/brewery-1.0.0.zip + sha256
+scripts/release.sh 1.0.0      # Release 빌드 → 서명 → 공증 → 스테이플 → build/release/brewery-1.0.0.zip + sha256
+gh release create v1.0.0 build/release/brewery-1.0.0.zip build/release/brewery-1.0.0.zip.sha256
+scripts/bump-cask.sh 1.0.0    # tap 저장소의 버전·sha256 갱신
+```
+
+서명·공증에는 키체인의 "Developer ID Application" 인증서와 공증 프로필이 필요하다.
+
+```bash
+xcrun notarytool store-credentials brewery-notary --apple-id <Apple ID> --team-id <팀 ID> --password <앱 암호>
 ```
 
 ## 앱 아이콘
