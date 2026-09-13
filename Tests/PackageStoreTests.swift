@@ -69,3 +69,20 @@ final class PackageStoreTests: XCTestCase {
         XCTAssertEqual(store.installed, [])
     }
 }
+
+@MainActor
+final class PackageStoreRefreshTests: XCTestCase {
+    func testRefreshUpdatesSearchResultInstalledFlag() async throws {
+        let runner = FakeRunner()
+        runner.stdout[["search", "--formula", "hello"]] = ["hello"]
+        runner.stdout[["search", "--cask", "hello"]] = []
+        runner.stdout[["list", "--formula", "--versions"]] = ["hello 2.12.3"]
+        runner.stdout[["list", "--cask"]] = []
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("caskroom-\(UUID().uuidString)")
+        let store = PackageStore(runner: runner, brewURL: URL(fileURLWithPath: "/opt/homebrew/bin/brew"), caskroom: root)
+        await store.search("hello")
+        XCTAssertEqual(store.searchResults.first?.isInstalled, false)
+        await store.refreshInstalled()
+        XCTAssertEqual(store.searchResults.first?.isInstalled, true)
+    }
+}

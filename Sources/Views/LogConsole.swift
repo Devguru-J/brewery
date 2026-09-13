@@ -53,7 +53,7 @@ struct LogConsole: View {
                         if let last = pipeline.log.last { proxy.scrollTo(last.id, anchor: .bottom) }
                     }
                 }
-                .frame(minHeight: 160)
+                .frame(minHeight: 120)
             }
         }
         .background(

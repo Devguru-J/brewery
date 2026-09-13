@@ -43,6 +43,8 @@ final class PackageStore {
             let casks = BrewListParser.caskVersions(names: BrewListParser.parseCaskNames(caskText),
                                                     caskroom: caskroom, fileManager: fileManager)
             installed = formulae + casks
+            let ids = Set(installed.map(\.id))
+            searchResults = searchResults.map { SearchResult(name: $0.name, kind: $0.kind, isInstalled: ids.contains($0.id)) }
             lastError = nil
         } catch {
             lastError = "설치 목록을 읽지 못했습니다: \(error.localizedDescription)"

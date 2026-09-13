@@ -30,6 +30,8 @@ xcodebuild -scheme brewery -destination 'platform=macOS' -derivedDataPath build 
 - 업데이트 가능 패키지 목록 (`brew outdated --greedy` 기준)
 - 실시간 로그, 복사·지우기
 - 메뉴바 아이콘: 업데이트 가능 개수 표시, 팝업에서 바로 실행
+- 설치된 패키지: formula/cask 목록, 이름 필터, 여러 개 선택 후 삭제(확인창)
+- 검색: `brew search` 결과에서 골라 설명·버전·홈페이지 확인 후 설치
 - 설정(⌘,)에서 테마 선택: macOS 순정(기본) / 다크 터미널 / 맥주집
 
 관리자 비밀번호가 필요한 cask는 GUI에서 입력받을 수 없어 실패로 표시됩니다. 그 항목은 터미널에서 직접 실행하세요.
